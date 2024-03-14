@@ -14,6 +14,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import LottieView from "lottie-react-native";
 import { auth, db } from "../../firebase";
 import GameOverComponent from "../components/GameOverContainer";
+import { Audio } from "expo-av";
 
 const bosses = [
   {
@@ -32,108 +33,9 @@ const bosses = [
     difficulty: "medium",
     operation: "-",
   },
-  {
-    name: "Multiplication",
-    health: 100,
-    points: 80,
-    bossImage: require("../../assets/addition-animation.json"),
-    difficulty: "hard",
-    operation: "*",
-  },
-  {
-    name: "Division",
-    health: 1000,
-    points: 100,
-    bossImage: require("../../assets/Animation - 1709466609397.json"),
-    difficulty: "hard",
-    operation: "/",
-  },
 ];
 
 const generateQuestion = (boss) => {
-  let num1, num2, answer;
-  do {
-    num1 = Math.floor(Math.random() * 10) + 1;
-    num2 = Math.floor(Math.random() * 10) + 1;
-    switch (boss.difficulty) {
-      case "easy":
-        answer = num1 + num2;
-        break;
-      case "medium":
-        answer = num1 - num2;
-        break;
-      case "hard":
-        answer = num1 * num2;
-        break;
-      default:
-        answer = 0;
-    }
-  } while (answer < 0);
-  return { num1, num2, answer };
-};
-
-export default function TurnBasedScreen() {
-  const animation = useRef(null);
-  const [playerHealth, setPlayerHealth] = useState(100);
-  const [boss, setBoss] = useState(bosses[0]);
-  const [message, setMessage] = useState("");
-  const [gameOver, setGameOver] = useState(false);
-  const [lives, setLives] = useState(3);
-  const [score, setScore] = useState(0);
-  const [question, setQuestion] = useState(generateQuestion(boss));
-
-  const checkAnswer = (userAnswer) => {
-    if (userAnswer === question.answer) {
-      setBoss({ ...boss, health: boss.health - 20 });
-      setMessage(`Correct! Boss takes damage.`);
-    } else {
-      setPlayerHealth(playerHealth - 20);
-      setMessage(`Incorrect! You take damage.`);
-    }
-    setQuestion(generateQuestion(boss));
-  };
-
-  useEffect(() => {
-    if (playerHealth <= 0 && lives > 0) {
-      setLives(lives - 1);
-      setPlayerHealth(100);
-      setBoss(bosses[Math.floor(Math.random() * bosses.length)]);
-    } else if (playerHealth <= 0 && lives === 0) {
-      setGameOver(true);
-      addDoc(collection(db, "leaderboards"), {
-        userId: auth.currentUser.uid,
-        score: score,
-        category: "Combat Based",
-      });
-      Alert.alert(`You lose!`);
-    } else if (boss.health <= 0) {
-      setScore(score + boss.points);
-      Alert.alert(`You win against ${boss.name}`);
-      setBoss(bosses[Math.floor(Math.random() * bosses.length)]);
-    }
-  }, [playerHealth, boss.health]);
-
-  const resetGame = () => {
-    setPlayerHealth(100);
-    setBoss(bosses[0]);
-    setMessage("");
-    setGameOver(false);
-    setLives(3);
-    setScore(0);
-    setQuestion(generateQuestion(boss));
-  };
-
-  useEffect(() => {
-    const playAnimationWithDelay = () => {
-      setTimeout(() => {
-        animation.current.reset();
-        animation.current.play();
-      }, 2000);
-    };
-    playAnimationWithDelay();
-  }, []);
-
-  // Shuffle function
   const shuffle = (array) => {
     let currentIndex = array.length,
       randomIndex;
@@ -154,12 +56,129 @@ export default function TurnBasedScreen() {
     return array;
   };
 
-  // Shuffle answer options and ensure correct answer is in the middle
-  const shuffledAnswers = shuffle([
-    question.answer - 1,
-    question.answer,
-    question.answer + 1,
-  ]);
+  let num1, num2, answer;
+  do {
+    num1 = Math.floor(Math.random() * 10) + 1;
+    num2 = Math.floor(Math.random() * 10) + 1;
+    switch (boss.difficulty) {
+      case "easy":
+        answer = num1 + num2;
+        break;
+      case "medium":
+        answer = num1 - num2;
+        break;
+      default:
+        answer = 0;
+    }
+  } while (answer < 0);
+
+  const possibleAnswers = [answer - 1, answer, answer + 1];
+  const shuffledAnswers = shuffle(possibleAnswers);
+
+  return { num1, num2, answer, possibleAnswers: shuffledAnswers };
+};
+
+export default function TurnBasedScreen() {
+  const animation = useRef(null);
+  const [playerHealth, setPlayerHealth] = useState(100);
+  const [boss, setBoss] = useState(bosses[0]);
+  const [message, setMessage] = useState("");
+  const [gameOver, setGameOver] = useState(false);
+  const [lives, setLives] = useState(3);
+  const [score, setScore] = useState(0);
+  const [question, setQuestion] = useState(generateQuestion(boss));
+  const [sound, setSound] = useState();
+  const [timeLeft, setTimeLeft] = useState(60);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      setGameOver(true);
+      Alert.alert("Time's up!");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  async function playSound() {
+    console.log("Loading Sound");
+    const { sound } = await Audio.Sound.createAsync(
+      require("../../assets/monster.mp3")
+    );
+    setSound(sound);
+
+    console.log("Playing Sound");
+    await sound.playAsync();
+  }
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log("Unloading Sound");
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+
+  useEffect(() => {
+    playSound();
+    setQuestion(generateQuestion(boss));
+  }, []);
+
+  const checkAnswer = (userAnswer) => {
+    if (userAnswer === question.answer) {
+      setBoss({ ...boss, health: boss.health - 20 });
+      setMessage(`Correct! Boss takes damage.`);
+    } else {
+      setPlayerHealth(playerHealth - 20);
+      setMessage(`Incorrect! You take damage.`);
+    }
+    setQuestion(generateQuestion(boss));
+  };
+
+  useEffect(() => {
+    if (playerHealth <= 0 && lives > 0) {
+      setLives(lives - 1);
+      setPlayerHealth(100);
+      setBoss(bosses[Math.floor(Math.random() * bosses.length)]);
+    } else if (timeLeft <= 0 || (playerHealth <= 0 && lives <= 0)) {
+      setGameOver(true);
+      console.log("tite");
+      addDoc(collection(db, "leaderboards"), {
+        userId: auth.currentUser.uid,
+        score: score,
+        category: "Combat Based",
+      });
+    } else if (boss.health <= 0) {
+      setScore(score + boss.points);
+      Alert.alert(`You win against ${boss.name}`);
+      setBoss(bosses[Math.floor(Math.random() * bosses.length)]);
+    }
+  }, [timeLeft, playerHealth, boss.health, lives, score]);
+
+  const resetGame = () => {
+    setPlayerHealth(100);
+    setBoss(bosses[0]);
+    setMessage("");
+    setGameOver(false);
+    setLives(3);
+    setScore(0);
+    setQuestion(generateQuestion(boss));
+  };
+
+  useEffect(() => {
+    const playAnimationWithDelay = () => {
+      setTimeout(() => {
+        animation.current.reset();
+        animation.current.play();
+      }, 2000);
+    };
+    playAnimationWithDelay();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -193,6 +212,9 @@ export default function TurnBasedScreen() {
         >
           Score: {score}
         </Text>
+        <Text style={{ fontSize: 20, alignSelf: "center" }}>
+          Time Left: {timeLeft}
+        </Text>
         <View style={styles.gameContainer}>
           <Text>{message}</Text>
           <LottieView
@@ -222,7 +244,7 @@ export default function TurnBasedScreen() {
                 </Text>
               </View>
               <View style={styles.answerContainer}>
-                {shuffledAnswers.map((answer) => (
+                {question.possibleAnswers.map((answer) => (
                   <TouchableOpacity
                     key={answer}
                     onPress={() => checkAnswer(answer)}

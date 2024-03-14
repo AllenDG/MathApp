@@ -12,8 +12,10 @@ import {
 } from "react-native";
 import { addDoc, collection } from "firebase/firestore";
 import { auth, db } from "../../firebase";
+import { Audio } from "expo-av";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import GameOverComponent from "../components/GameOverContainer";
+
 const QuizGame = () => {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -23,10 +25,50 @@ const QuizGame = () => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [scoreAddedToLeaderboard, setScoreAddedToLeaderboard] = useState(false);
+  const [sound, setSound] = useState();
+
+  async function playSound() {
+    console.log("Loading Sound");
+    const { sound } = await Audio.Sound.createAsync(
+      require("../../assets/quiz.mp3")
+    );
+    setSound(sound);
+
+    console.log("Playing Sound");
+    await sound.playAsync();
+  }
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log("Unloading Sound");
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+  
+  useEffect(() => {
+    playSound();
+  }, []);
 
   useEffect(() => {
     const initialQuestions = [
       { question: "2 + 2?", choices: ["2", "3", "4", "5"], correctAnswer: "4" },
+
+      {
+        question: "5 + 5?",
+        choices: ["10", "11", "12", "15"],
+        correctAnswer: "10",
+      },
+
+      { question: "3 + 1?", choices: ["1", "2", "3", "4"], correctAnswer: "4" },
+
+      {
+        question: "12 + 1?",
+        choices: ["13", "15", "14", "12"],
+        correctAnswer: "13",
+      },
+
       {
         question: "5 * 3?",
         choices: ["12", "15", "18", "20"],
@@ -40,7 +82,7 @@ const QuizGame = () => {
       {
         question: "12 - 7?",
         choices: ["3", "5", "6", "7"],
-        correctAnswer: "7",
+        correctAnswer: "5",
       },
     ];
 
@@ -123,8 +165,6 @@ const QuizGame = () => {
     </TouchableOpacity>
   );
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
@@ -133,8 +173,8 @@ const QuizGame = () => {
         style={{ flex: 1 }}
       >
         {isGameOver ? (
-          <View style={{flex: 1, justifyContent: 'flex-end'}}> 
-            <GameOverComponent score={score} restartGame={restartGame}/>
+          <View style={{ flex: 1, justifyContent: "flex-end" }}>
+            <GameOverComponent score={score} restartGame={restartGame} />
           </View>
         ) : (
           <>
@@ -162,7 +202,12 @@ const QuizGame = () => {
                     }).map((_, index) => (
                       <Image
                         source={require("../../assets/apple.png")}
-                        style={{ width: 62, height: 80, objectFit: "cover", padding: 12}}
+                        style={{
+                          width: 62,
+                          height: 80,
+                          objectFit: "cover",
+                          padding: 12,
+                        }}
                       />
                     ))}
                   </View>

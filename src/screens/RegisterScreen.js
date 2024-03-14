@@ -20,7 +20,7 @@ import {
   signUpInitialValue,
   signUpSchema,
 } from "../components/validations/RegisterValidation";
-import { Picker } from "@react-native-community/picker";
+import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
 import DatePicker from "@react-native-community/datetimepicker";
 import Input from "../components/input/Input";
@@ -28,7 +28,7 @@ import Button from "../components/button/Button";
 import BackButton from "../components/button/BackButton";
 
 export default function RegisterScreen({ navigation }) {
-  const MIN_AGE = 3;
+  const MIN_AGE = 4;
   const MAX_AGE = 6;
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [birthDate, setBirthDate] = useState(new Date());
@@ -123,8 +123,8 @@ export default function RegisterScreen({ navigation }) {
           source={require("../../assets/secondary-background.png")}
           style={RegisterStyles.imageBackground}
         >
-          <View style={RegisterStyles.header}> 
-            <BackButton navigation={navigation}/>
+          <View style={RegisterStyles.header}>
+            <BackButton navigation={navigation} />
             <Text style={RegisterStyles.title}>Create an account</Text>
           </View>
           <Formik
@@ -153,7 +153,7 @@ export default function RegisterScreen({ navigation }) {
                   onChangeText={handleChange("firstName")}
                   onBlur={handleBlur("firstName")}
                   value={values.firstName}
-                  placeholder="John"
+                  placeholder=""
                 />
                 <View style={RegisterStyles.label}>
                   <Text>Last Name</Text>
@@ -167,7 +167,7 @@ export default function RegisterScreen({ navigation }) {
                   onChangeText={handleChange("lastName")}
                   onBlur={handleBlur("lastName")}
                   value={values.lastName}
-                  placeholder="Doe"
+                  placeholder="Enter Last Name"
                 />
                 <View style={RegisterStyles.label}>
                   <Text>Sex</Text>
@@ -180,9 +180,9 @@ export default function RegisterScreen({ navigation }) {
                   style={RegisterStyles.select}
                 >
                   <Picker
+                    itemStyle={{ color: "#000" }}
                     selectedValue={values.sex}
                     onValueChange={handleChange("sex")}
-                    style={{ color: "#fff" }}
                   >
                     <Picker.Item label="Select your sex" value="" />
                     <Picker.Item label="Male" value="male" />
@@ -322,8 +322,8 @@ const RegisterStyles = StyleSheet.create({
     fontWeight: "bold",
     color: "#0078EB",
     textShadowColor: "#5BD1FF",
-    textShadowOffset: { width: -2, height: 2 }, 
-    textShadowRadius: 2, 
+    textShadowOffset: { width: -2, height: 2 },
+    textShadowRadius: 2,
   },
   subTitle: {
     fontSize: 18,

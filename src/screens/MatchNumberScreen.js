@@ -11,19 +11,41 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { addDoc, collection } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import GameOverComponent from "../components/GameOverContainer";
+import { Audio } from 'expo-av';
+
 
 const MatchNumberScreen = () => {
   const [numbers, setNumbers] = useState([]);
+  const [win, setWin] = useState(0);
   const [matchedIndexes, setMatchedIndexes] = useState([]);
   const [selectedIndexes, setSelectedIndexes] = useState([]);
   const [flippedIndexes, setFlippedIndexes] = useState([]);
   const [score, setScore] = useState(0);
-  const [remainingTime, setRemainingTime] = useState(20);
+  const [remainingTime, setRemainingTime] = useState(60);
   const [gameOver, setGameOver] = useState(false);
   const [scoreAddedToLeaderboard, setScoreAddedToLeaderboard] = useState(false);
   const progressBarProgress = remainingTime / 60;
+  const [sound, setSound] = useState();
 
-const generateRandomNumbers = () => {
+  async function playSound() {
+    console.log('Loading Sound');
+    const { sound } = await Audio.Sound.createAsync( require('../../assets/match.mp3')
+    );
+    setSound(sound);
+
+    console.log('Playing Sound');
+    await sound.playAsync();
+  }
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log('Unloading Sound');
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+  const generateRandomNumbers = () => {
     const nums = [];
     for (let i = 1; i <= 10; i++) {
       nums.push(i);
@@ -34,9 +56,10 @@ const generateRandomNumbers = () => {
     setMatchedIndexes([]);
     setSelectedIndexes([]);
     setFlippedIndexes([]);
-    setRemainingTime(60);
+    setRemainingTime(60 - win * 20);
     setGameOver(false);
-    setScoreAddedToLeaderboard(false); 
+    setScoreAddedToLeaderboard(false);
+    playSound()
   };
 
   const handleNumberPress = (index) => {
@@ -85,11 +108,12 @@ const generateRandomNumbers = () => {
 
   useEffect(() => {
     if (matchedIndexes.length === numbers.length && !gameOver) {
+      setWin(win + 1);
       generateRandomNumbers();
     }
   }, [matchedIndexes, gameOver]);
 
-useEffect(() => {
+  useEffect(() => {
     if (gameOver && !scoreAddedToLeaderboard) {
       addDoc(collection(db, "leaderboards"), {
         userId: auth.currentUser.uid,
@@ -100,9 +124,9 @@ useEffect(() => {
     }
   }, [matchedIndexes, gameOver, score, scoreAddedToLeaderboard]);
 
-
   const restartGame = () => {
     generateRandomNumbers();
+    setRemainingTime(60);
   };
 
   return (
@@ -114,7 +138,7 @@ useEffect(() => {
       >
         <View style={styles.game}>
           {gameOver ? (
-            <GameOverComponent score={score} restartGame={restartGame}/>
+            <GameOverComponent score={score} restartGame={restartGame} />
           ) : (
             <View style={styles.gameContainer}>
               <View style={styles.grid}>

@@ -10,7 +10,9 @@ import BotNavbar from './src/components/Navbar/BotNavbar';
 import TurnBasedScreen from './src/screens/TurnBasedScreen';
 import Quizgame from './src/screens/Quizgame';
 import MatchNumberScreen from './src/screens/MatchNumberScreen';
-
+import MatchNumberStartScreen from './src/screens/MatchNumberStartScreen';
+import QuizGameStartScreen from './src/screens/QuizGameStartScreen';
+import TurnBasedStartScreen from './src/screens/TurnBasedStartScreen';
 
 const Stack = createStackNavigator();
 
@@ -35,6 +37,10 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="QuizGame" component={Quizgame} />
           <Stack.Screen options={{ headerShown: false }} name="TurnBased" component={TurnBasedScreen} />
           <Stack.Screen options={{ headerShown: false }} name="MatchNumber" component={MatchNumberScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="MatchNumberStart" component={MatchNumberStartScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="QuizGameStart" component={QuizGameStartScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="TurnBasedStart" component={TurnBasedStartScreen} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

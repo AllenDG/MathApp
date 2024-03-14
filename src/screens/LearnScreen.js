@@ -62,16 +62,16 @@ export default function LearnScreen() {
 
   const gameItem = [
     {
-      image: require("../../assets/quiz.jpg"),
-      path: "QuizGame",
+      image: require("../../assets/logo1.png"),
+      path: "QuizGameStart",
     },
     {
-      image: require("../../assets/lock.jpg"),
-      path: "TurnBased",
+      image: require("../../assets/monsterMath.png"),
+      path: "TurnBasedStart",
     },
     {
-      image: require("../../assets/memory.jpg"),
-      path: "MatchNumber",
+      image: require("../../assets/mathyMatching.png"),
+      path: "MatchNumberStart",
     },
   ];
 
@@ -125,7 +125,7 @@ export default function LearnScreen() {
             </View>
             <View style={DashboardStyles.gameContainerOutline}>
               <LinearGradient
-                colors={["#FD8D14", "#FF5500"]}
+                colors={['rgba(255, 255, 255, 0.8)', 'transparent']}
                 style={DashboardStyles.gameContainer}
               >
                 <Text style={DashboardStyles.title}>Popular Games</Text>
@@ -163,8 +163,6 @@ const DashboardStyles = StyleSheet.create({
     borderRadius: 20,
   },
   gameContainerOutline: {
-    borderColor: "#FF8C00",
-    borderWidth: 2,
     borderRadius: 20,
     margin: 20,
   },
@@ -183,7 +181,7 @@ const DashboardStyles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 12,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#000",
   },
   videoContainer: {
     margin: 20,
